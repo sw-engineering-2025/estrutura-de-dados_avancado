@@ -289,3 +289,6 @@ mensagens, confirmação de entrega, rotação automática de chaves.
   garantido por construção.
 - Autenticação com HMAC no lugar do CRC.
 - Fila de mensagens e confirmação de entrega no retorno do motoboy.
+
+
+

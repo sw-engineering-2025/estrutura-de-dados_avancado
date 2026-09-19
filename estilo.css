@@ -1,0 +1,461 @@
+/* ------------------------------------------------------------------
+   MSGX — a interface é uma guia de remessa: campos delimitados como
+   formulário carbonado, serrilha de destaque e carimbo de lacre.
+   ------------------------------------------------------------------ */
+
+:root {
+  --papel:        #dce3e1;
+  --papel-campo:  #f1f4f3;
+  --papel-guia:   #e9edec;
+  --tinta:        #13202a;
+  --tinta-suave:  #56686f;
+  --linha:        #a3b4b4;
+  --linha-forte:  #7d9291;
+  --carimbo:      #a8352b;
+  --aferido:      #2a6a52;
+
+  --sans: "Archivo", "Helvetica Neue", system-ui, sans-serif;
+  --mono: "IBM Plex Mono", ui-monospace, "SF Mono", Menlo, monospace;
+}
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  padding: 2rem 1.25rem 4rem;
+  background: var(--papel);
+  color: var(--tinta);
+  font-family: var(--sans);
+  font-size: 16px;
+  line-height: 1.55;
+  -webkit-font-smoothing: antialiased;
+}
+
+.guia {
+  max-width: 62rem;
+  margin: 0 auto;
+  background: var(--papel-guia);
+  border: 1px solid var(--linha-forte);
+  box-shadow: 0 1px 0 var(--linha);
+}
+
+/* ---------------------------------------------------------------- topo */
+
+.topo {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1.5rem 2rem;
+  align-items: flex-end;
+  justify-content: space-between;
+  padding: 1.5rem 1.75rem 1.25rem;
+  border-bottom: 2px solid var(--tinta);
+}
+
+.identidade { display: flex; flex-direction: column; }
+
+.sigla {
+  font-size: 2.1rem;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  line-height: 1;
+}
+
+.subtitulo {
+  margin-top: 0.35rem;
+  font-size: 0.86rem;
+  color: var(--tinta-suave);
+}
+
+.rota { display: flex; flex-direction: column; gap: 0.4rem; }
+
+.rota-etiqueta,
+.lacre-etiqueta,
+.campo-nome {
+  font-size: 0.74rem;
+  letter-spacing: 0.02em;
+  color: var(--tinta-suave);
+}
+
+.rota-trilho { display: flex; align-items: center; gap: 0.5rem; }
+
+.filial {
+  font-family: inherit;
+  font-size: 0.95rem;
+  font-weight: 600;
+  padding: 0.35rem 0.85rem;
+  background: transparent;
+  color: var(--tinta-suave);
+  border: 1px solid var(--linha);
+  border-radius: 2px;
+  cursor: pointer;
+}
+
+.filial[aria-pressed="true"] {
+  background: var(--tinta);
+  border-color: var(--tinta);
+  color: var(--papel-guia);
+}
+
+.percurso {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  color: var(--tinta-suave);
+}
+
+.percurso-linha {
+  width: 1.4rem;
+  border-top: 1px dashed var(--linha-forte);
+}
+
+.percurso-veiculo {
+  font-size: 0.68rem;
+  letter-spacing: 0.04em;
+}
+
+.lacre { display: flex; flex-direction: column; gap: 0.25rem; text-align: right; }
+
+.lacre-valor {
+  font-family: var(--mono);
+  font-size: 1rem;
+  font-weight: 500;
+  color: var(--carimbo);
+}
+
+/* ---------------------------------------------------------------- abas */
+
+.abas {
+  display: flex;
+  gap: 0;
+  border-bottom: 1px solid var(--linha-forte);
+  background: var(--papel);
+}
+
+.aba {
+  font-family: inherit;
+  font-size: 0.95rem;
+  font-weight: 500;
+  padding: 0.75rem 1.4rem;
+  background: transparent;
+  color: var(--tinta-suave);
+  border: 0;
+  border-right: 1px solid var(--linha);
+  border-bottom: 3px solid transparent;
+  cursor: pointer;
+}
+
+.aba[aria-selected="true"] {
+  background: var(--papel-guia);
+  color: var(--tinta);
+  border-bottom-color: var(--carimbo);
+}
+
+/* --------------------------------------------------------------- painel */
+
+.painel { padding: 1.75rem; }
+
+.introducao {
+  margin: 0 0 1.5rem;
+  max-width: 54ch;
+  color: var(--tinta-suave);
+}
+
+.dupla {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+  margin-bottom: 1.25rem;
+}
+
+.campo {
+  border: 1px solid var(--linha-forte);
+  background: var(--papel-campo);
+  padding: 0.55rem 0.8rem 0.7rem;
+  margin-bottom: 1.25rem;
+}
+
+.campo-nome { display: block; margin-bottom: 0.3rem; }
+
+.campo-fixo { margin-bottom: 0; }
+
+.campo-valor {
+  display: block;
+  font-size: 1.15rem;
+  font-weight: 600;
+}
+
+textarea {
+  width: 100%;
+  font-family: inherit;
+  font-size: 1rem;
+  line-height: 1.55;
+  color: var(--tinta);
+  background: transparent;
+  border: 0;
+  resize: vertical;
+  padding: 0;
+}
+
+textarea:focus { outline: none; }
+
+.campo:focus-within { outline: 2px solid var(--tinta); outline-offset: 1px; }
+
+.rodape-campo {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem 1rem;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 0.6rem;
+  padding-top: 0.5rem;
+  border-top: 1px dotted var(--linha);
+  font-size: 0.8rem;
+  color: var(--tinta-suave);
+}
+
+.nota-ia { font-style: italic; }
+
+/* --------------------------------------------------------------- botões */
+
+.acoes { display: flex; flex-wrap: wrap; gap: 0.7rem; align-items: center; }
+
+.botao-principal,
+.botao-secundario,
+.botao-texto {
+  font-family: inherit;
+  font-size: 0.92rem;
+  font-weight: 600;
+  cursor: pointer;
+  border-radius: 2px;
+}
+
+.botao-principal {
+  padding: 0.6rem 1.35rem;
+  background: var(--tinta);
+  color: var(--papel-guia);
+  border: 1px solid var(--tinta);
+}
+
+.botao-secundario {
+  padding: 0.6rem 1.1rem;
+  background: transparent;
+  color: var(--tinta);
+  border: 1px solid var(--linha-forte);
+}
+
+.botao-texto {
+  padding: 0.2rem 0;
+  background: none;
+  border: 0;
+  color: var(--tinta);
+  text-decoration: underline;
+  font-weight: 500;
+  font-size: 0.8rem;
+}
+
+button:disabled { opacity: 0.45; cursor: progress; }
+
+button:focus-visible,
+.enviar-arquivo:focus-within {
+  outline: 2px solid var(--carimbo);
+  outline-offset: 2px;
+}
+
+.enviar-arquivo { cursor: pointer; text-decoration: underline; }
+.enviar-arquivo input { position: absolute; width: 1px; height: 1px; opacity: 0; }
+
+/* ------------------------------------------------------------ mensagens */
+
+.erro {
+  margin: 1.25rem 0 0;
+  padding: 0.7rem 0.9rem;
+  border-left: 3px solid var(--carimbo);
+  background: rgba(168, 53, 43, 0.07);
+  color: var(--carimbo);
+  font-size: 0.92rem;
+}
+
+/* ----------------------------------------------------------- comprovante */
+
+.comprovante { margin-top: 2rem; }
+
+.serrilha {
+  height: 10px;
+  background-image: radial-gradient(circle at 5px 5px, var(--papel) 3.5px, transparent 4px);
+  background-size: 12px 10px;
+  border-top: 1px dashed var(--linha-forte);
+}
+
+.comprovante-corpo {
+  position: relative;
+  padding: 1.5rem 1.75rem 1.75rem;
+  background: var(--papel-campo);
+  border: 1px solid var(--linha-forte);
+  border-top: 0;
+}
+
+.comprovante-titulo {
+  margin: 0 0 0.4rem;
+  font-size: 1.15rem;
+  font-weight: 700;
+}
+
+.comprovante-titulo.aferido { color: var(--aferido); }
+.comprovante-titulo + .comprovante-titulo { margin-top: 1.75rem; }
+
+.comprovante-linha { margin: 0 0 1.1rem; color: var(--tinta-suave); }
+
+.carimbo {
+  position: absolute;
+  top: 1.1rem;
+  right: 1.4rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.15rem;
+  padding: 0.5rem 0.9rem;
+  color: var(--carimbo);
+  border: 2.5px solid var(--carimbo);
+  border-radius: 3px;
+  transform: rotate(-7deg);
+  opacity: 0.88;
+}
+
+.carimbo-titulo {
+  font-size: 1.05rem;
+  font-weight: 700;
+  letter-spacing: 0.16em;
+}
+
+.carimbo-id { font-family: var(--mono); font-size: 0.66rem; }
+
+.carimbo.aplicando { animation: bater 380ms cubic-bezier(0.2, 1.4, 0.4, 1); }
+
+@keyframes bater {
+  from { transform: rotate(-16deg) scale(2.1); opacity: 0; }
+  to   { transform: rotate(-7deg) scale(1);   opacity: 0.88; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .carimbo.aplicando { animation: none; }
+}
+
+.medidas {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(9.5rem, 1fr));
+  gap: 1rem 1.5rem;
+  margin: 0 0 1.25rem;
+  padding-top: 1rem;
+  border-top: 1px solid var(--linha);
+}
+
+.medidas dt { font-size: 0.75rem; color: var(--tinta-suave); }
+.medidas dd { margin: 0.15rem 0 0; font-size: 1.05rem; font-weight: 600; }
+.medidas dd.mono, .mono { font-family: var(--mono); font-size: 0.82rem; font-weight: 400; }
+
+.observacao {
+  margin: 0 0 1.25rem;
+  max-width: 58ch;
+  padding-left: 0.85rem;
+  border-left: 2px solid var(--linha-forte);
+  font-size: 0.88rem;
+  color: var(--tinta-suave);
+}
+
+.mensagem-lida {
+  margin: 0 0 1.25rem;
+  padding: 1rem 1.2rem;
+  background: var(--papel-guia);
+  border-left: 3px solid var(--aferido);
+  font-size: 1.08rem;
+}
+
+/* -------------------------------------------------------------- arquivos */
+
+.lista-arquivos { list-style: none; margin: 0; padding: 0; }
+
+.lista-arquivos li + li { border-top: 1px dotted var(--linha); }
+
+.lista-arquivos .vazio { padding: 0.5rem 0; color: var(--tinta-suave); font-size: 0.9rem; }
+
+.item-arquivo {
+  display: flex;
+  width: 100%;
+  gap: 1rem;
+  align-items: baseline;
+  justify-content: space-between;
+  padding: 0.55rem 0;
+  background: none;
+  border: 0;
+  font-family: var(--mono);
+  font-size: 0.82rem;
+  color: var(--tinta);
+  text-align: left;
+  cursor: pointer;
+}
+
+.item-arquivo:hover { color: var(--carimbo); }
+.item-arquivo .peso { color: var(--tinta-suave); white-space: nowrap; }
+
+/* ---------------------------------------------------------------- árvore */
+
+.visor-arvore { margin-top: 1.5rem; }
+
+.visor-arvore svg { display: block; }
+
+.rolagem-arvore {
+  overflow-x: auto;
+  padding: 0.5rem;
+  border: 1px solid var(--linha);
+  background: var(--papel-guia);
+}
+
+.tabela-codigos {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(11rem, 1fr));
+  gap: 0.35rem 1.25rem;
+  margin-top: 1.25rem;
+  font-family: var(--mono);
+  font-size: 0.78rem;
+}
+
+.tabela-codigos span { display: flex; justify-content: space-between; gap: 0.75rem; }
+.tabela-codigos .bits { color: var(--carimbo); }
+
+.hexdump {
+  margin: 0 0 1.25rem;
+  padding: 0.9rem 1rem;
+  background: var(--tinta);
+  color: #9fb8b4;
+  font-family: var(--mono);
+  font-size: 0.78rem;
+  line-height: 1.7;
+  white-space: pre-wrap;
+  word-break: break-all;
+  overflow-x: auto;
+}
+
+/* --------------------------------------------------------------- rodapé */
+
+.rodape {
+  padding: 1.1rem 1.75rem;
+  border-top: 1px solid var(--linha-forte);
+  background: var(--papel);
+  font-size: 0.78rem;
+  color: var(--tinta-suave);
+}
+
+/* --------------------------------------------------------------- mobile */
+
+@media (max-width: 42rem) {
+  body { padding: 0; }
+  .guia { border-left: 0; border-right: 0; }
+  .topo { padding: 1.25rem; }
+  .lacre { text-align: left; }
+  .abas { overflow-x: auto; }
+  .aba { white-space: nowrap; padding: 0.7rem 1rem; }
+  .painel { padding: 1.25rem; }
+  .dupla { grid-template-columns: 1fr; }
+  .carimbo { position: static; align-self: flex-start; margin-bottom: 1rem; width: max-content; }
+  .comprovante-corpo { display: flex; flex-direction: column; padding: 1.25rem; }
+}

@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>MSGX — guia de remessa</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="estilo.css">
+</head>
+<body>
+
+<div class="guia">
+
+  <header class="topo">
+    <div class="identidade">
+      <span class="sigla">MSGX</span>
+      <span class="subtitulo">guia de remessa interna</span>
+    </div>
+
+    <div class="rota" role="group" aria-label="Filial em que você está">
+      <span class="rota-etiqueta">você está em</span>
+      <div class="rota-trilho">
+        <button type="button" class="filial" data-filial="1" aria-pressed="true">Maricá</button>
+        <span class="percurso" aria-hidden="true">
+          <span class="percurso-linha"></span>
+          <span class="percurso-veiculo">moto</span>
+          <span class="percurso-linha"></span>
+        </span>
+        <button type="button" class="filial" data-filial="2" aria-pressed="false">Niterói</button>
+      </div>
+    </div>
+
+    <div class="lacre">
+      <span class="lacre-etiqueta">chave desta filial</span>
+      <span class="lacre-valor" id="lacre">········</span>
+    </div>
+  </header>
+
+  <nav class="abas" role="tablist">
+    <button type="button" role="tab" class="aba" data-aba="despachar" aria-selected="true">Despachar</button>
+    <button type="button" role="tab" class="aba" data-aba="receber" aria-selected="false">Receber</button>
+    <button type="button" role="tab" class="aba" data-aba="pericia" aria-selected="false">Perícia</button>
+  </nav>
+
+  <!-- ============================ DESPACHAR ============================ -->
+  <section class="painel" id="painel-despachar" role="tabpanel">
+
+    <div class="dupla">
+      <div class="campo campo-fixo">
+        <span class="campo-nome">remetente</span>
+        <output class="campo-valor" id="remetente">Maricá</output>
+      </div>
+      <div class="campo campo-fixo">
+        <span class="campo-nome">destinatário</span>
+        <output class="campo-valor" id="destinatario">Niterói</output>
+      </div>
+    </div>
+
+    <div class="campo">
+      <label class="campo-nome" for="mensagem">mensagem</label>
+      <textarea id="mensagem" rows="5" placeholder="Ex.: estoque da loja zerou no SKU 88213, enviar 40 peças até sexta."></textarea>
+      <div class="rodape-campo">
+        <span id="contador">0 caracteres</span>
+        <span id="aviso-ia" class="nota-ia"></span>
+      </div>
+    </div>
+
+    <div class="acoes">
+      <button type="button" class="botao-secundario" id="botao-resumir">Resumir com IA</button>
+      <button type="button" class="botao-secundario" id="botao-redigir">Redigir com IA</button>
+      <button type="button" class="botao-principal" id="botao-lacrar">Lacrar e gravar</button>
+    </div>
+
+    <p class="erro" id="erro-despachar" hidden></p>
+
+    <!-- comprovante -->
+    <div class="comprovante" id="comprovante" hidden>
+      <div class="serrilha" aria-hidden="true"></div>
+
+      <div class="comprovante-corpo">
+        <div class="carimbo" id="carimbo">
+          <span class="carimbo-titulo">lacrado</span>
+          <span class="carimbo-id" id="carimbo-id"></span>
+        </div>
+
+        <h2 class="comprovante-titulo">Gravado no pen drive</h2>
+        <p class="comprovante-linha" id="comprovante-rota"></p>
+
+        <dl class="medidas">
+          <div><dt>texto original</dt><dd id="medida-original"></dd></div>
+          <div><dt>após a árvore</dt><dd id="medida-comprimida"></dd></div>
+          <div><dt>redução</dt><dd id="medida-reducao"></dd></div>
+          <div><dt>arquivo final</dt><dd id="medida-arquivo"></dd></div>
+        </dl>
+
+        <p class="observacao" id="observacao-tamanho" hidden>
+          Em mensagens curtas o cabeçalho de 35 bytes e a tabela de frequências
+          pesam mais que o ganho da compressão. Aqui a árvore está pelo sigilo e
+          pela estrutura, não pela economia de espaço.
+        </p>
+
+        <div class="acoes">
+          <button type="button" class="botao-principal" id="botao-baixar">Baixar arquivo .msgx</button>
+          <button type="button" class="botao-secundario" id="botao-arvore-despacho">Ver a árvore</button>
+        </div>
+
+        <div class="visor-arvore" id="arvore-despacho" hidden></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============================= RECEBER ============================= -->
+  <section class="painel" id="painel-receber" role="tabpanel" hidden>
+
+    <div class="campo">
+      <span class="campo-nome">arquivos no pen drive</span>
+      <ul class="lista-arquivos" id="lista-receber">
+        <li class="vazio">Nenhuma remessa no pen drive.</li>
+      </ul>
+      <div class="rodape-campo">
+        <label class="enviar-arquivo">
+          Chegou em outro pen drive? Selecionar arquivo
+          <input type="file" id="upload-receber" accept=".msgx">
+        </label>
+        <button type="button" class="botao-texto" id="botao-atualizar">Atualizar lista</button>
+      </div>
+    </div>
+
+    <p class="erro" id="erro-receber" hidden></p>
+
+    <div class="comprovante" id="recebido" hidden>
+      <div class="serrilha" aria-hidden="true"></div>
+      <div class="comprovante-corpo">
+        <h2 class="comprovante-titulo aferido">Remessa aberta</h2>
+        <p class="comprovante-linha" id="recebido-rota"></p>
+
+        <blockquote class="mensagem-lida" id="recebido-texto"></blockquote>
+
+        <dl class="medidas">
+          <div><dt>enviada em</dt><dd id="recebido-data"></dd></div>
+          <div><dt>protocolo</dt><dd class="mono" id="recebido-id"></dd></div>
+          <div><dt>símbolos na árvore</dt><dd id="recebido-simbolos"></dd></div>
+          <div><dt>bits lidos</dt><dd id="recebido-bits"></dd></div>
+        </dl>
+
+        <button type="button" class="botao-secundario" id="botao-arvore-recebida">Ver a árvore reconstruída</button>
+        <div class="visor-arvore" id="arvore-recebida" hidden></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============================== PERÍCIA ============================ -->
+  <section class="painel" id="painel-pericia" role="tabpanel" hidden>
+
+    <p class="introducao">
+      Esta tela mostra o que alguém conseguiria extrair do pen drive sem ter a
+      chave das filiais — o cenário do vazamento que originou o sistema.
+    </p>
+
+    <div class="campo">
+      <span class="campo-nome">arquivos no pen drive</span>
+      <ul class="lista-arquivos" id="lista-pericia">
+        <li class="vazio">Nenhuma remessa no pen drive.</li>
+      </ul>
+      <div class="rodape-campo">
+        <label class="enviar-arquivo">
+          Analisar arquivo de fora
+          <input type="file" id="upload-pericia" accept=".msgx">
+        </label>
+      </div>
+    </div>
+
+    <p class="erro" id="erro-pericia" hidden></p>
+
+    <div class="comprovante" id="laudo" hidden>
+      <div class="serrilha" aria-hidden="true"></div>
+      <div class="comprovante-corpo">
+        <h2 class="comprovante-titulo">O que está legível</h2>
+        <dl class="medidas">
+          <div><dt>origem</dt><dd id="laudo-origem"></dd></div>
+          <div><dt>destino</dt><dd id="laudo-destino"></dd></div>
+          <div><dt>data</dt><dd id="laudo-data"></dd></div>
+          <div><dt>protocolo</dt><dd class="mono" id="laudo-id"></dd></div>
+        </dl>
+
+        <h2 class="comprovante-titulo">O que está cifrado</h2>
+        <p class="comprovante-linha" id="laudo-tamanho"></p>
+        <pre class="hexdump" id="laudo-hex"></pre>
+        <p class="observacao">
+          Permanecem ilegíveis o alfabeto usado, a tabela de frequências, o
+          tamanho real da mensagem, o formato da árvore e o texto. A chave não
+          viaja no pen drive — ela já está nas duas filiais.
+        </p>
+      </div>
+    </div>
+  </section>
+
+  <footer class="rodape">
+    Estrutura de Dados Avançada · árvore de Huffman com cifra de fluxo ·
+    o mesmo núcleo Python atende esta interface e a linha de comando
+  </footer>
+
+</div>
+
+<script src="app.js"></script>
+</body>
+</html>

@@ -239,7 +239,13 @@ function preencherLista(seletor, arquivos, aoEscolher) {
     const botao = document.createElement("button");
     botao.type = "button";
     botao.className = "item-arquivo";
-    botao.innerHTML = `<span>${arquivo.nome}</span><span class="peso">${arquivo.bytes} bytes</span>`;
+    // O nome vem do pen drive, que não é confiável: textContent nunca vira HTML.
+    const nome = document.createElement("span");
+    nome.textContent = arquivo.nome;
+    const peso = document.createElement("span");
+    peso.className = "peso";
+    peso.textContent = `${arquivo.bytes} bytes`;
+    botao.append(nome, peso);
     botao.addEventListener("click", () => aoEscolher({ nome: arquivo.nome }));
     item.appendChild(botao);
     lista.appendChild(item);
@@ -439,7 +445,8 @@ function montarTabela(codigos) {
 }
 
 function escapar(texto) {
-  return String(texto).replace(/[&<>]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;" }[c]));
+  return String(texto).replace(/[&<>"']/g, (c) =>
+    ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
 }
 
 /* ----------------------------------------------------------------- start */

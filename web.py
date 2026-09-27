@@ -27,6 +27,7 @@ Sem dependencias externas: tudo com a biblioteca padrao do Python.
 
 import base64
 import json
+import re
 import sys
 from datetime import datetime, timezone
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
@@ -44,6 +45,13 @@ RAIZ = Path(__file__).resolve().parent
 # Layout normal: os arquivos da interface ficam em static/. Se alguem baixar
 # tudo numa pasta so, eles ficam ao lado do web.py -- os dois casos funcionam.
 ESTATICOS = RAIZ / "static" if (RAIZ / "static" / "index.html").is_file() else RAIZ
+
+# Toda remessa legitima se chama <uuid4>.msgx. O pen drive nao e confiavel,
+# entao qualquer outro nome (por exemplo, um com HTML dentro) nem e listado.
+NOME_REMESSA = re.compile(
+    r"^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}"
+    + re.escape(config.EXTENSAO) + "$"
+)
 
 TIPOS_MIME = {
     ".html": "text/html; charset=utf-8",
@@ -134,7 +142,8 @@ class Servidor(BaseHTTPRequestHandler):
                 pasta = config.garantir_pendrive()
                 arquivos = sorted(pasta.glob(f"*{config.EXTENSAO}"), reverse=True)
                 self.responder_json({"arquivos": [
-                    {"nome": a.name, "bytes": a.stat().st_size} for a in arquivos
+                    {"nome": a.name, "bytes": a.stat().st_size}
+                    for a in arquivos if NOME_REMESSA.match(a.name)
                 ]})
             elif caminho == "/api/historico":
                 self.responder_json({"mensagens": [

@@ -1,8 +1,13 @@
 #!/usr/bin/env python3
 """Testes do pipeline. Executar: python3 testes.py"""
 
-import huffman
+import tempfile
+from pathlib import Path
+
+import config
 import formato
+import historico
+import huffman
 
 CHAVE = "chave-de-teste-123"
 OUTRA = "chave-errada-456"
@@ -82,6 +87,35 @@ freq = {ord("a"): 1, ord("b"): 1, ord("c"): 1, ord("d"): 1, ord("e"): 1}
 c1 = huffman.gerar_codigos(huffman.construir_arvore(freq))
 c2 = huffman.gerar_codigos(huffman.construir_arvore(dict(reversed(list(freq.items())))))
 verificar(c1 == c2, "frequencias iguais produzem sempre a mesma arvore")
+
+print("\n9. Historico SQLite guarda a mensagem cifrada")
+with tempfile.TemporaryDirectory() as pasta:
+    config.HISTORICO = Path(pasta) / "historico.db"      # nunca suja o banco real
+
+    pacote = formato.empacotar(CASOS[0], CHAVE, 1, 2)
+    msg_id = str(pacote["msg_id"])
+    historico.registrar(historico.ENVIADA, pacote["arquivo"])
+    historico.registrar(historico.ENVIADA, pacote["arquivo"])      # repetido
+    historico.registrar(historico.RECEBIDA, pacote["arquivo"])
+
+    registros = historico.listar()
+    verificar(len(registros) == 2, "registro repetido nao duplica; enviada e recebida coexistem")
+    verificar(registros[0]["origem"] == 1 and registros[0]["destino"] == 2,
+              "envelope listado sem precisar da chave")
+
+    guardado = historico.obter_arquivo(msg_id, historico.ENVIADA)
+    verificar(formato.desempacotar(guardado, CHAVE)["texto"] == CASOS[0],
+              "mensagem reaberta do historico com a chave")
+    try:
+        formato.desempacotar(guardado, OUTRA)
+        verificar(False, "historico deveria exigir a chave certa")
+    except ValueError:
+        verificar(True, "historico com chave errada recusado")
+
+    verificar(CASOS[0].encode() not in config.HISTORICO.read_bytes(),
+              "texto nao aparece em claro no historico.db")
+    verificar(historico.obter_arquivo("inexistente", historico.ENVIADA) is None,
+              "id desconhecido devolve None")
 
 print("\n" + ("-" * 50))
 print("TODOS OS TESTES PASSARAM" if falhas == 0 else f"{falhas} FALHA(S)")

@@ -28,12 +28,14 @@ Sem dependencias externas: tudo com a biblioteca padrao do Python.
 import base64
 import json
 import sys
+from datetime import datetime, timezone
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 
 import cifra
 import config
 import formato
+import historico
 import huffman
 import ia
 
@@ -134,6 +136,19 @@ class Servidor(BaseHTTPRequestHandler):
                 self.responder_json({"arquivos": [
                     {"nome": a.name, "bytes": a.stat().st_size} for a in arquivos
                 ]})
+            elif caminho == "/api/historico":
+                self.responder_json({"mensagens": [
+                    {
+                        "msg_id": m["msg_id"],
+                        "direcao": m["direcao"],
+                        "origem": config.nome_filial(m["origem"]),
+                        "destino": config.nome_filial(m["destino"]),
+                        "data": datetime.fromtimestamp(m["criada_em"], timezone.utc)
+                                        .strftime("%d/%m/%Y %H:%M UTC"),
+                        "bytes": m["bytes"],
+                    }
+                    for m in historico.listar()
+                ]})
             elif not caminho.startswith("/api/") and self.servir_estatico(caminho):
                 pass
             else:
@@ -204,6 +219,7 @@ class Servidor(BaseHTTPRequestHandler):
         pasta = config.garantir_pendrive()
         nome = f"{pacote['msg_id']}{config.EXTENSAO}"
         (pasta / nome).write_bytes(pacote["arquivo"])
+        historico.registrar(historico.ENVIADA, pacote["arquivo"])
 
         bits_originais = pacote["bits_originais"]
         bits_comprimidos = pacote["bits_comprimidos"]
@@ -225,6 +241,12 @@ class Servidor(BaseHTTPRequestHandler):
     def rota_receber(self, corpo):
         arquivo = self.obter_arquivo(corpo)
         resultado = formato.desempacotar(arquivo, config.CHAVE)
+
+        # So entra no historico o que abriu com a chave certa. Reabrir um item
+        # do proprio historico nao gera registro novo -- senao uma mensagem
+        # enviada, ao ser relida, apareceria tambem como "recebida".
+        if not corpo.get("historico"):
+            historico.registrar(historico.RECEBIDA, arquivo)
 
         self.responder_json({
             "texto": resultado["texto"],
@@ -258,7 +280,17 @@ class Servidor(BaseHTTPRequestHandler):
     # ------------------------------------------------------------------
 
     def obter_arquivo(self, corpo) -> bytes:
-        """Aceita o arquivo enviado pelo navegador ou escolhido no pen drive."""
+        """
+        Aceita o arquivo enviado pelo navegador, escolhido no pen drive ou
+        guardado no historico local.
+        """
+        if corpo.get("historico"):
+            arquivo = historico.obter_arquivo(str(corpo["historico"]),
+                                              str(corpo.get("direcao", "")))
+            if arquivo is None:
+                raise ValueError("Mensagem não encontrada no histórico.")
+            return arquivo
+
         if corpo.get("arquivo"):
             try:
                 return base64.b64decode(corpo["arquivo"])
@@ -323,6 +355,7 @@ def main():
     print(f"  Filiais ..... {' | '.join(config.FILIAIS.values())}")
     print(f"  Lacre ....... {cifra.impressao_digital(config.CHAVE)}")
     print(f"  Pen drive ... {config.PENDRIVE}/")
+    print(f"  Histórico ... {config.HISTORICO}")
     print("  Ctrl+C para encerrar.")
     print()
 

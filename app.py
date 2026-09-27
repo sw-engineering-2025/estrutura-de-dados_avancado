@@ -11,11 +11,13 @@ o mesmo programa, configurado com a outra filial, abre o arquivo.
 """
 
 import sys
+from datetime import datetime, timezone
 from pathlib import Path
 
 import cifra
 import config
 import formato
+import historico
 import huffman
 import ia
 
@@ -95,6 +97,7 @@ def escrever_mensagem():
     pasta = config.garantir_pendrive()
     caminho = pasta / f"{resultado['msg_id']}{config.EXTENSAO}"
     caminho.write_bytes(resultado["arquivo"])
+    historico.registrar(historico.ENVIADA, resultado["arquivo"])
 
     bits_originais = resultado["bits_originais"]
     bits_comprimidos = resultado["bits_comprimidos"]
@@ -136,12 +139,18 @@ def ler_mensagem():
         return
     caminho = arquivos[int(escolha) - 1]
 
+    arquivo = caminho.read_bytes()
     try:
-        resultado = formato.desempacotar(caminho.read_bytes(), config.CHAVE)
+        resultado = formato.desempacotar(arquivo, config.CHAVE)
     except ValueError as erro:
         print(f"\nFalha na leitura: {erro}")
         return
 
+    historico.registrar(historico.RECEBIDA, arquivo)
+    exibir_mensagem(resultado)
+
+
+def exibir_mensagem(resultado):
     titulo("MENSAGEM RECUPERADA")
     print(f"De .............. {config.nome_filial(resultado['origem'])}")
     print(f"Para ............ {config.nome_filial(resultado['destino'])}")
@@ -152,6 +161,36 @@ def ler_mensagem():
 
     if perguntar("\nVer a arvore reconstruida? (s/n)", "n").lower() == "s":
         mostrar_arvore(resultado["raiz"], resultado["codigos"], resultado["frequencias"])
+
+
+def ver_historico():
+    titulo("HISTORICO DESTA FILIAL")
+
+    mensagens = historico.listar()
+    if not mensagens:
+        print(f"Nenhuma mensagem registrada em {config.HISTORICO}")
+        return
+
+    for indice, m in enumerate(mensagens, 1):
+        data = datetime.fromtimestamp(m["criada_em"], timezone.utc)
+        rota = f"{config.nome_filial(m['origem'])} -> {config.nome_filial(m['destino'])}"
+        print(f"  {indice:>2}) {data:%d/%m/%Y %H:%M}  {m['direcao']:<8}  {rota}  "
+              f"[{m['msg_id'][:8]}]")
+
+    escolha = input("\nAbrir qual (Enter para voltar): ").strip()
+    if not escolha:
+        return
+    if not (escolha.isdigit() and 1 <= int(escolha) <= len(mensagens)):
+        print("Opcao invalida.")
+        return
+
+    escolhida = mensagens[int(escolha) - 1]
+    arquivo = historico.obter_arquivo(escolhida["msg_id"], escolhida["direcao"])
+    try:
+        # O historico guarda o .msgx cifrado: reabrir exige a chave, igual ao pen drive.
+        exibir_mensagem(formato.desempacotar(arquivo, config.CHAVE))
+    except ValueError as erro:
+        print(f"\nFalha na leitura: {erro}")
 
 
 def auditar():
@@ -208,6 +247,7 @@ def menu():
         print("  1) Escrever mensagem e gravar no pen drive")
         print("  2) Ler mensagem do pen drive")
         print("  3) Auditar arquivo (simular vazamento)")
+        print("  4) Historico de mensagens desta filial")
         print("  0) Sair")
 
         opcao = input("\nOpcao: ").strip()
@@ -217,6 +257,8 @@ def menu():
             ler_mensagem()
         elif opcao == "3":
             auditar()
+        elif opcao == "4":
+            ver_historico()
         elif opcao == "0":
             print("Ate mais.")
             return

@@ -86,14 +86,17 @@ async function ocupado(botao, tarefa) {
 
 /* ------------------------------------------------------------- navegação */
 
-$$(".aba").forEach((aba) => {
-  aba.addEventListener("click", () => {
-    $$(".aba").forEach((outra) => outra.setAttribute("aria-selected", String(outra === aba)));
-    $$(".painel").forEach((painel) => {
-      painel.hidden = painel.id !== `painel-${aba.dataset.aba}`;
-    });
-    if (aba.dataset.aba !== "despachar") listarPendrive();
+function ativarAba(nome) {
+  $$(".aba").forEach((aba) => aba.setAttribute("aria-selected", String(aba.dataset.aba === nome)));
+  $$(".painel").forEach((painel) => {
+    painel.hidden = painel.id !== `painel-${nome}`;
   });
+  if (nome === "historico") listarHistorico();
+  else if (nome !== "despachar") listarPendrive();
+}
+
+$$(".aba").forEach((aba) => {
+  aba.addEventListener("click", () => ativarAba(aba.dataset.aba));
 });
 
 $$(".filial").forEach((botao) => {
@@ -164,6 +167,7 @@ $("#botao-lacrar").addEventListener("click", (evento) => {
       estado.pacote = pacote;
       exibirComprovante(pacote);
       listarPendrive();
+      listarHistorico();
     } catch (erro) {
       mostrarErro("#erro-despachar", erro.message);
     }
@@ -272,6 +276,7 @@ async function abrirRemessa(referencia) {
 
     $("#arvore-recebida").hidden = true;
     $("#arvore-recebida").innerHTML = "";
+    listarHistorico();
   } catch (erro) {
     $("#recebido").hidden = true;
     mostrarErro("#erro-receber", erro.message);
@@ -301,6 +306,43 @@ async function periciar(referencia) {
     mostrarErro("#erro-pericia", erro.message);
   }
 }
+
+/* ------------------------------------------------------------- histórico */
+
+async function listarHistorico() {
+  mostrarErro("#erro-historico", "");
+  const lista = $("#lista-historico");
+  try {
+    const { mensagens } = await chamar("/api/historico");
+    lista.innerHTML = "";
+
+    if (!mensagens.length) {
+      lista.innerHTML = '<li class="vazio">Nenhuma mensagem no histórico.</li>';
+      return;
+    }
+
+    mensagens.forEach((m) => {
+      const item = document.createElement("li");
+      const botao = document.createElement("button");
+      botao.type = "button";
+      botao.className = "item-arquivo";
+      botao.innerHTML = `<span>${escapar(m.data)} · ${escapar(m.direcao)} · `
+        + `${escapar(m.origem)} → ${escapar(m.destino)}</span>`
+        + `<span class="peso">${escapar(m.msg_id.slice(0, 8))}</span>`;
+      // Reabre pela mesma rota do pen drive: o servidor decifra com a chave.
+      botao.addEventListener("click", () => {
+        ativarAba("receber");
+        abrirRemessa({ historico: m.msg_id, direcao: m.direcao });
+      });
+      item.appendChild(botao);
+      lista.appendChild(item);
+    });
+  } catch (erro) {
+    mostrarErro("#erro-historico", erro.message);
+  }
+}
+
+$("#botao-atualizar-historico").addEventListener("click", listarHistorico);
 
 /* ---------------------------------------------------------------- árvore */
 
@@ -411,7 +453,7 @@ function escapar(texto) {
     atualizarRota();
     listarPendrive();
   } catch (erro) {
-    ["#erro-despachar", "#erro-receber", "#erro-pericia"]
+    ["#erro-despachar", "#erro-receber", "#erro-pericia", "#erro-historico"]
       .forEach((seletor) => mostrarErro(seletor, erro.message));
   }
 })();

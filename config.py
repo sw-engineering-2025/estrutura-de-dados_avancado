@@ -18,7 +18,15 @@ CHAVE = os.environ.get("MSGX_CHAVE", CHAVE_PADRAO)
 # por exemplo /media/leonardo/PENDRIVE.
 PENDRIVE = Path(os.environ.get("MSGX_PENDRIVE", "./pendrive"))
 
+# Historico local da filial. NUNCA dentro da pasta do pen drive.
+HISTORICO = Path(os.environ.get("MSGX_HISTORICO", "./historico.db"))
+
 EXTENSAO = ".msgx"
+
+# Historico local da filial (SQLite). Fica na maquina da filial e NUNCA dentro
+# da pasta do pen drive. Com duas filiais na mesma maquina, use um arquivo
+# para cada:  MSGX_HISTORICO=marica.db  /  MSGX_HISTORICO=niteroi.db
+HISTORICO = Path(os.environ.get("MSGX_HISTORICO", "./historico.db"))
 
 # Limite de caracteres que a IA usa como alvo ao resumir ("mensagens curtas").
 LIMITE_MENSAGEM_CURTA = 180

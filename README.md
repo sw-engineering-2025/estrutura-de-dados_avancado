@@ -38,13 +38,15 @@ python3 web.py            # abra http://localhost:8000
 Sem dependências: o servidor usa apenas a biblioteca padrão do Python, então
 não há `pip install` para dar errado na hora da apresentação.
 
-Três telas:
+Quatro telas:
 
 - **Despachar** — escrever (ou pedir à IA para resumir/redigir), lacrar, ver a
   árvore desenhada e baixar o `.msgx`.
 - **Receber** — abrir uma remessa do pen drive ou de um arquivo enviado, com a
   árvore reconstruída ao lado do texto recuperado.
 - **Perícia** — o que um terceiro leria no arquivo sem ter a chave.
+- **Histórico** — mensagens que esta filial lacrou ou abriu; clicar reabre a
+  mensagem (exige a chave).
 
 ### Interface de linha de comando
 
@@ -64,13 +66,13 @@ Dois terminais, duas portas, a mesma chave — as duas filiais conversando:
 
 ```bash
 # terminal 1 — Maricá
-MSGX_CHAVE="chave-combinada" python3 web.py 8000
+MSGX_CHAVE="chave-combinada" MSGX_HISTORICO=marica.db python3 web.py 8000
 
 # terminal 2 — Niterói
-MSGX_CHAVE="chave-combinada" python3 web.py 8001
+MSGX_CHAVE="chave-combinada" MSGX_HISTORICO=niteroi.db python3 web.py 8001
 
 # terminal 3 — o pen drive que caiu na estrada
-MSGX_CHAVE="chave-errada" python3 web.py 8002
+MSGX_CHAVE="chave-errada" MSGX_HISTORICO=invasor.db python3 web.py 8002
 ```
 
 Em `:8000`, escolha *Maricá*, escreva a mensagem e lacre. Em `:8001`, escolha
@@ -106,6 +108,7 @@ endereço que ele imprimir no terminal.
 |---|---|
 | `MSGX_CHAVE` | Chave pré-compartilhada entre as filiais |
 | `MSGX_PENDRIVE` | Caminho do pen drive (ex.: `/media/usuario/PENDRIVE`) |
+| `MSGX_HISTORICO` | Arquivo SQLite do histórico local (padrão `./historico.db`) |
 | `ANTHROPIC_API_KEY` ou `GEMINI_API_KEY` | Habilita a IA remota (opcional) |
 
 Sem chave de API, a IA cai automaticamente para um resumidor extrativo local.
@@ -121,7 +124,8 @@ A demonstração nunca depende da internet da sala.
 | `cifra.py` | Keystream SHA-256, XOR, CRC32 |
 | `formato.py` | Serialização e leitura do arquivo `.msgx` |
 | `ia.py` | Resumo/redação da mensagem, com fallback offline |
-| `config.py` | Filiais, chave, caminho do pen drive |
+| `historico.py` | Histórico local em SQLite (guarda o `.msgx` cifrado) |
+| `config.py` | Filiais, chave, caminho do pen drive e do histórico |
 | `app.py` | Interface de linha de comando |
 | `web.py` | Servidor HTTP que expõe o núcleo como API JSON |
 | `static/` | Interface web (HTML, CSS e JavaScript) |
@@ -136,9 +140,10 @@ CLI e vice-versa, porque ambas produzem o mesmo `.msgx` pelo mesmo código.
 |---|---|
 | `GET /api/configuracao` | Filiais, limite de caracteres e impressão digital da chave |
 | `GET /api/pendrive` | Remessas presentes no pen drive |
+| `GET /api/historico` | Mensagens enviadas e recebidas por esta filial (só o envelope) |
 | `POST /api/ia` | Resume ou redige a mensagem |
 | `POST /api/despachar` | Comprime, cifra, grava e devolve o arquivo em base64 |
-| `POST /api/receber` | Decifra, reconstrói a árvore e devolve o texto |
+| `POST /api/receber` | Decifra, reconstrói a árvore e devolve o texto (aceita `nome`, `arquivo` ou `historico` + `direcao`) |
 | `POST /api/periciar` | Devolve só o envelope e o dump hexadecimal do bloco cifrado |
 
 ### Pipeline
@@ -222,6 +227,16 @@ mensagens cifradas com o mesmo keystream elimina a chave da equação. Derivando
 o keystream de `SHA256(chave ‖ msg_id ‖ contador)`, duas mensagens idênticas
 geram arquivos completamente diferentes. O teste nº 7 comprova.
 
+**Histórico em SQLite guardando o arquivo cifrado, não o texto.**
+O sistema nasceu de um vazamento; um histórico com o texto em claro seria um
+caminho novo para a mesma falha. Por isso a tabela `mensagens` guarda o `.msgx`
+inteiro num campo BLOB e copia para colunas só o envelope (origem, destino,
+data, id), que já viaja em claro no pen drive. A lista aparece sem chave; ler o
+texto passa pelo mesmo `formato.desempacotar()` e exige a chave. Quem copiar o
+`historico.db` fica na mesma situação de quem achou o pen drive. O SQLite vem na
+biblioteca padrão, então o projeto continua sem dependências. A chave primária
+`(msg_id, direcao)` impede duplicatas ao abrir a mesma remessa duas vezes.
+
 **CRC32.**
 Pen drive cai no chão e setor corrompe. O checksum distingue "arquivo
 corrompido no transporte" de "chave errada" — diagnósticos diferentes, ações
@@ -289,6 +304,3 @@ mensagens, confirmação de entrega, rotação automática de chaves.
   garantido por construção.
 - Autenticação com HMAC no lugar do CRC.
 - Fila de mensagens e confirmação de entrega no retorno do motoboy.
-
-
-

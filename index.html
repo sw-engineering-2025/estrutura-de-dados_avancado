@@ -42,6 +42,7 @@
     <button type="button" role="tab" class="aba" data-aba="despachar" aria-selected="true">Despachar</button>
     <button type="button" role="tab" class="aba" data-aba="receber" aria-selected="false">Receber</button>
     <button type="button" role="tab" class="aba" data-aba="pericia" aria-selected="false">Perícia</button>
+    <button type="button" role="tab" class="aba" data-aba="historico" aria-selected="false">Histórico</button>
   </nav>
 
   <!-- ============================ DESPACHAR ============================ -->
@@ -197,9 +198,31 @@
     </div>
   </section>
 
+  <!-- ============================= HISTÓRICO =========================== -->
+  <section class="painel" id="painel-historico" role="tabpanel" hidden>
+
+    <p class="introducao">
+      Mensagens que esta filial lacrou ou abriu. O histórico guarda o arquivo
+      .msgx ainda cifrado: a lista mostra só o envelope, e o texto só aparece
+      ao abrir a mensagem com a chave desta filial.
+    </p>
+
+    <div class="campo">
+      <span class="campo-nome">mensagens registradas</span>
+      <ul class="lista-arquivos" id="lista-historico">
+        <li class="vazio">Nenhuma mensagem no histórico.</li>
+      </ul>
+      <div class="rodape-campo">
+        <span></span>
+        <button type="button" class="botao-texto" id="botao-atualizar-historico">Atualizar lista</button>
+      </div>
+    </div>
+
+    <p class="erro" id="erro-historico" hidden></p>
+  </section>
+
   <footer class="rodape">
-    Estrutura de Dados Avançada · árvore de Huffman com cifra de fluxo ·
-    o mesmo núcleo Python atende esta interface e a linha de comando
+
   </footer>
 
 </div>
